@@ -1,0 +1,8 @@
+[[databases]]
+schema = "db1"
+
+[[databases]]
+schema = "db2"
+
+[[databases]]
+schema = "db3"

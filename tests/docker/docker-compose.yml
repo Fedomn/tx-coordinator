@@ -1,0 +1,11 @@
+version: "3"
+services:
+  postgres:
+    container_name: tx-coordinator-postgres
+    image: postgres:11.5-alpine
+    volumes:
+      - ../docker:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_MULTIPLE_DATABASES_USERS: db1,db2,db3
+    ports:
+      - "5432:5432"
