@@ -1,24 +1,41 @@
+use std::collections::HashMap;
 use std::fs;
 
 use anyhow::Result;
+use itertools::Itertools;
 use serde::Deserialize;
 
+/// Database config: schema to DbCfg
+#[derive(Debug)]
+pub struct DbsCfg {
+    pub dbs: HashMap<String, DbCfg>,
+}
+
 #[derive(Deserialize, Debug)]
-pub struct Cfg {
+struct DbCfgVec {
     databases: Vec<DbCfg>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct DbCfg {
-    schema: String,
-    secret: String,
+    pub schema: String,
+    pub secret: String,
 }
 
-impl Cfg {
-    pub fn new(cfg_file: &str) -> Result<Cfg> {
+impl DbsCfg {
+    pub fn new(cfg_file: &str) -> Result<Self> {
         let content = fs::read_to_string(cfg_file)?;
-        let result: Cfg = toml::from_str(&content)?;
-        Ok(result)
+        let db_cfg_vec: DbCfgVec = toml::from_str(&content)?;
+
+        let res = db_cfg_vec
+            .databases
+            .into_iter()
+            .into_group_map_by(|db| db.schema.clone())
+            .into_iter()
+            .map(|(schema, dbs)| (schema, dbs.first().unwrap().clone()))
+            .collect::<HashMap<String, DbCfg>>();
+
+        Ok(DbsCfg { dbs: res })
     }
 }
 
@@ -29,8 +46,7 @@ mod cfg_test {
     #[test]
     fn deserialize_cfg_success() {
         let cfg_file = "./tests/cfg.toml";
-        let cfg = Cfg::new(cfg_file).unwrap();
-        assert_eq!(cfg.databases.len(), 3);
-        assert_eq!(cfg.databases[0].schema, "db1");
+        let cfg = DbsCfg::new(cfg_file).unwrap();
+        assert_eq!(cfg.dbs.get("db1").unwrap().schema, "db1");
     }
 }
