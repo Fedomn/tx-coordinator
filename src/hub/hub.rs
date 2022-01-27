@@ -1,24 +1,33 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
 use itertools::Itertools;
+
+use crate::cfg::DbsCfg;
+use crate::hub::db::DB;
 
 /// Hub organizes database schema and sql files.
 pub struct Hub {
-    dbs: HashMap<String, Vec<String>>,
+    dbs: HashMap<String, DB>,
 }
 
 impl Hub {
-    pub fn new(dir: &str) -> Result<Hub> {
+    pub fn new(dir: &str, cfg: &DbsCfg) -> Hub {
+        let files = Self::glob_files(dir);
+
+        let db_sql_mapping = Self::build_schema_sql_files_mapping(files);
+
+        let dbs = Self::build_dbs(cfg, db_sql_mapping);
+
+        Hub { dbs }
+    }
+
+    fn glob_files(dir: &str) -> Vec<String> {
         let pattern = format!("{}/*.sql", dir);
 
-        let files = glob::glob(pattern.as_str())?
+        glob::glob(pattern.as_str())
+            .unwrap()
             .map(|entry| entry.unwrap().to_str().unwrap().to_string())
-            .collect::<Vec<_>>();
-
-        let dbs = Hub::build_schema_sql_files_mapping(files);
-
-        Ok(Hub { dbs })
+            .collect::<Vec<_>>()
     }
 
     fn build_schema_sql_files_mapping(files: Vec<String>) -> HashMap<String, Vec<String>> {
@@ -36,6 +45,30 @@ impl Hub {
             })
             .collect::<HashMap<String, Vec<String>>>()
     }
+
+    fn build_dbs(
+        cfg: &DbsCfg,
+        db_sql_mapping: HashMap<String, Vec<String>>,
+    ) -> HashMap<String, DB> {
+        db_sql_mapping
+            .into_iter()
+            .map(|(schema, sql_files)| {
+                (
+                    schema.clone(),
+                    DB {
+                        schema: schema.clone(),
+                        secret: cfg
+                            .dbs
+                            .get(&schema)
+                            .expect(&format!("not found schema {} in cfg", schema.clone()))
+                            .secret
+                            .clone(),
+                        sql_files,
+                    },
+                )
+            })
+            .collect::<HashMap<String, DB>>()
+    }
 }
 
 #[cfg(test)]
@@ -44,27 +77,9 @@ mod hub_tests {
 
     #[test]
     fn glob_test_files_success() {
-        let result = Hub::new("./tests/sqlfiles").unwrap();
-        assert_eq!(
-            result.dbs,
-            HashMap::from([
-                (
-                    "db1".to_string(),
-                    vec![
-                        "tests/sqlfiles/0-db1-test.sql".to_string(),
-                        "tests/sqlfiles/1-db1-test.sql".to_string(),
-                    ]
-                ),
-                (
-                    "db2".to_string(),
-                    vec!["tests/sqlfiles/0-db2-test.sql".to_string()]
-                ),
-                (
-                    "db3".to_string(),
-                    vec!["tests/sqlfiles/0-db3-test.sql".to_string()]
-                ),
-            ])
-        );
+        let result = Hub::glob_files("./tests/sqlfiles");
+
+        assert_eq!(result.len(), 4);
     }
 
     #[test]
@@ -90,5 +105,37 @@ mod hub_tests {
                 ),
             ])
         );
+    }
+
+    #[test]
+    fn build_dbs_success() {
+        use crate::cfg::DbCfg;
+        let cfg = DbsCfg {
+            dbs: HashMap::from([
+                (
+                    "db1".to_string(),
+                    DbCfg {
+                        schema: "db1".to_string(),
+                        secret: "secret1".to_string(),
+                    },
+                ),
+                (
+                    "db2".to_string(),
+                    DbCfg {
+                        schema: "db2".to_string(),
+                        secret: "secret2".to_string(),
+                    },
+                ),
+                (
+                    "db3".to_string(),
+                    DbCfg {
+                        schema: "db3".to_string(),
+                        secret: "secret3".to_string(),
+                    },
+                ),
+            ]),
+        };
+        let hub = Hub::new("./tests/sqlfiles", &cfg);
+        assert_eq!(hub.dbs.len(), 3);
     }
 }
