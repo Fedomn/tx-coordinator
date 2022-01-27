@@ -10,3 +10,5 @@ anyhow = "1"
 itertools = "0.10"
 toml = "0.5"
 serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres"] }
+tokio = { version = "1", features = ["full"] }
