@@ -5,6 +5,9 @@ use clap::Parser;
 pub struct Args {
     #[clap(help = "The path of configuration file", default_value = "./cfg.toml")]
     cfg: String,
+
+    #[clap(help = "The directory of executed sql files", default_value = "./sqlfiles")]
+    dir: String,
 }
 
 fn main() {
