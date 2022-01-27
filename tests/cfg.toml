@@ -1,8 +1,11 @@
 [[databases]]
 schema = "db1"
+secret = "postgres://postgres:@127.0.0.1/db1"
 
 [[databases]]
 schema = "db2"
+secret = "postgres://postgres:@127.0.0.1/db2"
 
 [[databases]]
 schema = "db3"
+secret = "postgres://postgres:@127.0.0.1/db3"

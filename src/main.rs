@@ -1,4 +1,5 @@
 use clap::Parser;
+mod cfg;
 mod hub;
 
 #[derive(Parser, Debug)]

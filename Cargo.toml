@@ -8,3 +8,5 @@ clap = { version = "3.0.12", features = ["derive"] }
 glob = "0.3"
 anyhow = "1"
 itertools = "0.10"
+toml = "0.5"
+serde = { version = "1", features = ["derive"] }
