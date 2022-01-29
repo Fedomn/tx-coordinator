@@ -1,5 +1,5 @@
 use sqlx::postgres::PgPoolOptions;
-use sqlx::{Pool, Postgres};
+use sqlx::{Error, Pool, Postgres};
 
 pub struct DB {
     pub schema: String,
@@ -8,12 +8,11 @@ pub struct DB {
 }
 
 impl DB {
-    pub async fn gen_pool(&self) -> Pool<Postgres> {
+    pub async fn gen_pool(&self) -> Result<Pool<Postgres>, Error> {
         PgPoolOptions::new()
-            .max_connections(5)
+            .max_connections(1)
             .connect(self.secret.as_str())
             .await
-            .unwrap()
     }
 }
 
@@ -32,7 +31,7 @@ mod db_test {
             sql_files: vec![],
         };
 
-        let pool = db.gen_pool().await;
+        let pool = db.gen_pool().await?;
 
         let row: (i64,) = sqlx::query_as("SELECT $1")
             .bind(150_i64)
