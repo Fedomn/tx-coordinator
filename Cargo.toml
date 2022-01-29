@@ -14,3 +14,6 @@ sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres"] }
 tokio = { version = "1", features = ["full"] }
 async-trait = "0.1.52"
 tokio-stream = "0.1"
+tracing = "0.1"
+tracing-appender = "0.1"
+tracing-subscriber = { version = "0.2", features = ["json", "chrono"] }

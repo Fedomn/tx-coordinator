@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use tracing::{info, instrument};
 
 use crate::cfg::DbsCfg;
 use crate::hub::db::DB;
@@ -11,12 +12,15 @@ pub struct Hub {
 }
 
 impl Hub {
+    #[instrument(name = "hub_new", skip_all)]
     pub fn new(dir: &str, cfg: &DbsCfg) -> Hub {
         let files = Self::glob_files(dir);
 
         let db_sql_mapping = Self::build_schema_sql_files_mapping(files);
 
         let dbs = Self::build_dbs(cfg, db_sql_mapping);
+
+        info!("Hub created");
 
         Hub { dbs }
     }

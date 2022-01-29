@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use tracing::{info, instrument};
 
 use anyhow::Result;
 use itertools::Itertools;
@@ -23,6 +24,7 @@ pub struct DbCfg {
 }
 
 impl DbsCfg {
+    #[instrument(name = "dbs_cfg_new", skip_all)]
     pub fn new(cfg_file: &str) -> Result<Self> {
         let content = fs::read_to_string(cfg_file)?;
         let db_cfg_vec: DbCfgVec = toml::from_str(&content)?;
@@ -34,6 +36,8 @@ impl DbsCfg {
             .into_iter()
             .map(|(schema, dbs)| (schema, dbs.first().unwrap().clone()))
             .collect::<HashMap<String, DbCfg>>();
+
+        info!("Dbs cfg created");
 
         Ok(DbsCfg { dbs: res })
     }
