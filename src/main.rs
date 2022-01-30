@@ -3,8 +3,8 @@ use clap::Parser;
 use tracing::info;
 
 use cfg::DbsCfg;
-use hub::hub::Hub;
 
+use hub::Hub;
 
 mod cfg;
 mod hub;

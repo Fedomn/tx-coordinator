@@ -18,7 +18,7 @@ check:
 clean:
 	cargo clean
 
-fix: doc
+fix:
 	cargo fix --allow-dirty --allow-staged
 	cargo fmt -- --check
 	cargo clippy --all-targets --all-features --tests --benches -- -D warnings
@@ -26,7 +26,7 @@ fix: doc
 doc:
 	cargo doc --all-features --no-deps
 
-release:
+release: test doc
 	cargo build --release
 
 simulate:
