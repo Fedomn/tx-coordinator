@@ -67,7 +67,7 @@ impl Hub {
                         secret: cfg
                             .dbs
                             .get(&schema)
-                            .expect(&format!("not found schema {} in cfg", schema.clone()))
+                            .unwrap_or_else(|| panic!("not found schema {} in cfg", schema.clone()))
                             .secret
                             .clone(),
                         sql_files,

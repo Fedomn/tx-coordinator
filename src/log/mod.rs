@@ -26,5 +26,5 @@ pub fn init_log() -> (WorkerGuard, Span) {
 
     let root = span!(tracing::Level::INFO, "tx-coordinator");
 
-    return (_file_guard, root);
+    (_file_guard, root)
 }
