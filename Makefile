@@ -30,4 +30,4 @@ release: test doc
 	cargo build --release
 
 simulate:
-	RUST_LOG=info cargo run -- --cfg ./tests/cfg.toml --dir ./tests/sqlfiles
+	cargo run -- --cfg ./tests/cfg.toml --dir ./tests/sqlfiles

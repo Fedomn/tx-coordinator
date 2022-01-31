@@ -1,4 +1,4 @@
-use tracing::{span, Span};
+use tracing::{Level, span, Span};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{
     fmt::{self, format},
@@ -18,8 +18,12 @@ pub fn init_log() -> (WorkerGuard, Span) {
         .event_format(format().compact())
         .with_writer(std::io::stdout);
 
+    let filter_layer = EnvFilter::try_from_default_env()
+        .or_else(|_| EnvFilter::try_new("tx_coordinator=info"))
+        .unwrap();
+
     tracing_subscriber::registry()
-        .with(EnvFilter::from_default_env())
+        .with(filter_layer)
         .with(file_layer)
         .with(std_layer)
         .init();
