@@ -3,7 +3,7 @@ use clap::Parser;
 use tracing::info;
 
 use cfg::DbsCfg;
-
+use hub::coordinator;
 use hub::Hub;
 
 mod cfg;
@@ -38,7 +38,17 @@ async fn main() -> Result<()> {
     info!("Got args: {:?}", args);
 
     let dbs_cfg = DbsCfg::new(&args.cfg).unwrap();
-    let _dbs_hub = Hub::new(&args.dir, &dbs_cfg);
+    let dbs_hub = Hub::new(&args.dir, &dbs_cfg);
+    info!("Read cfg: {:?}", dbs_hub);
+
+    let txs = dbs_hub.build_tx().await.unwrap();
+    info!("Init transaction done.");
+
+    let coordinator = coordinator::TxCoordinator::new(txs);
+    match coordinator.commit_or_rollback().await {
+        Ok(_) => info!("Migration done."),
+        Err(e) => info!("Migration failed: {}", e),
+    }
 
     Ok(())
 }

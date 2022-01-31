@@ -6,28 +6,30 @@ use sqlx::{Pool, Postgres, Transaction};
 use tokio::sync::Mutex;
 use tokio_stream::StreamExt;
 
+/// https://github.com/pretzelhammer/rust-blog/blob/master/posts/common-rust-lifetime-misconceptions.md#2-if-t-static-then-t-must-be-valid-for-the-entire-program
+/// The latter can be dynamically allocated at run-time, can be safely and freely mutated, can be dropped, and can live for arbitrary durations.
 #[async_trait]
-pub trait Tx {
+pub trait Tx: Send + Sync + 'static {
     fn get_id(&self) -> String;
     async fn execute(&self) -> Result<()>;
-    async fn commit(self) -> Result<()>;
-    async fn rollback(self) -> Result<()>;
+    async fn commit(&self) -> Result<()>;
+    async fn rollback(&self) -> Result<()>;
 }
 
-struct CopyDataTx<'a> {
+pub struct CopyDataTx {
     id: String,
     // use option in mutex for Transaction to move ownership in commit/rollback method
     // refer: https://stackoverflow.com/questions/30573188/cannot-move-data-out-of-a-mutex
-    _raw_tx: Arc<Mutex<Option<Transaction<'a, Postgres>>>>,
+    _raw_tx: Arc<Mutex<Option<Transaction<'static, Postgres>>>>,
     sql_files: Vec<String>,
 }
 
-impl<'a> CopyDataTx<'a> {
-    async fn new(
+impl CopyDataTx {
+    pub async fn new(
         id: impl Into<String>,
         pool: Pool<Postgres>,
         sql_files: Vec<String>,
-    ) -> Result<CopyDataTx<'a>> {
+    ) -> Result<CopyDataTx> {
         let tx = pool.begin().await?;
         Ok(CopyDataTx {
             id: id.into(),
@@ -38,7 +40,7 @@ impl<'a> CopyDataTx<'a> {
 }
 
 #[async_trait]
-impl<'a> Tx for CopyDataTx<'a> {
+impl Tx for CopyDataTx {
     fn get_id(&self) -> String {
         self.id.clone()
     }
@@ -57,14 +59,14 @@ impl<'a> Tx for CopyDataTx<'a> {
         Ok(())
     }
 
-    async fn commit(self) -> Result<()> {
+    async fn commit(&self) -> Result<()> {
         let mut mutex = self._raw_tx.lock().await;
         let tx = mutex.take().unwrap();
         tx.commit().await?;
         Ok(())
     }
 
-    async fn rollback(self) -> Result<()> {
+    async fn rollback(&self) -> Result<()> {
         let mut mutex = self._raw_tx.lock().await;
         let tx = mutex.take().unwrap();
         tx.rollback().await?;
@@ -74,10 +76,19 @@ impl<'a> Tx for CopyDataTx<'a> {
 
 #[cfg(test)]
 mod copy_data_tx_test {
+    use std::sync::Arc;
+
     use anyhow::Result;
 
     use crate::hub::db::DB;
     use crate::hub::tx::{CopyDataTx, Tx};
+
+    async fn run(tx: Arc<dyn Tx>) -> Result<()> {
+        // use &self to avoid: cannot move a value of type dyn Tx: the size of dyn Tx cannot be statically determined
+        tx.execute().await?;
+        tx.rollback().await?;
+        Ok(())
+    }
 
     #[tokio::test]
     #[ignore]
@@ -90,8 +101,7 @@ mod copy_data_tx_test {
         let pool = db.gen_pool().await?;
 
         let tx = CopyDataTx::new("id", pool, db.sql_files.clone()).await?;
-        tx.execute().await?;
-        tx.rollback().await?;
+        run(Arc::new(tx)).await?;
 
         // check that inserted value is now gone
         let pool2 = db.gen_pool().await?;

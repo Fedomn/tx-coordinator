@@ -1,6 +1,7 @@
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Error, Pool, Postgres};
 
+#[derive(Debug)]
 pub struct DB {
     pub schema: String,
     pub secret: String,

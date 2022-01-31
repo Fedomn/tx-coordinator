@@ -1,29 +1,30 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
+use anyhow::Result;
 use itertools::Itertools;
-use tracing::{info, instrument};
 
 use crate::cfg::DbsCfg;
 use crate::hub::db::DB;
+use crate::hub::tx::{CopyDataTx, Tx};
 
+pub mod coordinator;
 pub mod db;
 pub mod tx;
 
 /// Hub organizes database schema and sql files.
+#[derive(Debug)]
 pub struct Hub {
     dbs: HashMap<String, DB>,
 }
 
 impl Hub {
-    #[instrument(name = "hub_new", skip_all)]
     pub fn new(dir: &str, cfg: &DbsCfg) -> Hub {
         let files = Self::glob_files(dir);
 
         let db_sql_mapping = Self::build_schema_sql_files_mapping(files);
 
         let dbs = Self::build_dbs(cfg, db_sql_mapping);
-
-        info!("Hub created");
 
         Hub { dbs }
     }
@@ -75,6 +76,16 @@ impl Hub {
                 )
             })
             .collect::<HashMap<String, DB>>()
+    }
+
+    pub async fn build_tx(&self) -> Result<Vec<Arc<dyn Tx>>> {
+        let mut txs = Vec::<Arc<dyn Tx>>::new();
+        for (schema, db) in self.dbs.iter() {
+            let pool = db.gen_pool().await?;
+            let tx = CopyDataTx::new(schema, pool, db.sql_files.clone()).await?;
+            txs.push(Arc::new(tx));
+        }
+        Ok(txs)
     }
 }
 

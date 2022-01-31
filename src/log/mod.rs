@@ -1,4 +1,4 @@
-use tracing::{Level, span, Span};
+use tracing::{span, Span};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{
     fmt::{self, format},
