@@ -30,4 +30,4 @@ release: test doc
 	cargo build --release
 
 simulate:
-	cargo run -- --cfg ./tests/cfg.toml --dir ./tests/sqlfiles
+	RUST_LOG=tx_coordinator=debug cargo run -- --cfg ./tests/cfg.toml --dir ./tests/sqlfiles
