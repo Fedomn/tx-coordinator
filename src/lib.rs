@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use tracing::{info, Span};
+use tracing::Span;
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::cfg::DbsCfg;
@@ -24,14 +24,5 @@ pub fn read_cfg(cfg_file: &str, dir: &str) -> Result<Hub> {
 
 pub async fn execute(txs: Vec<Arc<dyn Tx>>) -> Result<()> {
     let coordinator = coordinator::TxCoordinator::new(txs);
-    match coordinator.commit_or_rollback().await {
-        Ok(_) => {
-            info!("Migration done.");
-            Ok(())
-        }
-        Err(e) => {
-            info!("Migration failed: {}", e);
-            Err(e)
-        }
-    }
+    coordinator.commit_or_rollback().await
 }

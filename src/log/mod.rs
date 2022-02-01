@@ -24,7 +24,7 @@ pub fn init_log() -> (WorkerGuard, Span) {
         .with_writer(std::io::stdout);
 
     let filter_layer = EnvFilter::try_from_default_env()
-        .or_else(|_| EnvFilter::try_new("tx_coordinator=info"))
+        .or_else(|_| EnvFilter::try_new("txcoordinator=info"))
         .unwrap();
 
     tracing_subscriber::registry()
@@ -33,7 +33,7 @@ pub fn init_log() -> (WorkerGuard, Span) {
         .with(std_layer)
         .init();
 
-    let root = span!(tracing::Level::INFO, "tx-coordinator");
+    let root = span!(tracing::Level::INFO, "txcoordinator");
 
     (_file_guard, root)
 }

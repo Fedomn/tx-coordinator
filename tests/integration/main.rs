@@ -4,9 +4,9 @@ mod integration_test {
 
     use anyhow::Result;
 
-    use tx_coordinator::hub::db::DB;
-    use tx_coordinator::hub::tx::{CopyDataTx, Tx};
-    use tx_coordinator::{execute, init_log, read_cfg};
+    use txcoordinator::hub::db::DB;
+    use txcoordinator::hub::tx::{CopyDataTx, Tx};
+    use txcoordinator::{execute, init_log, read_cfg};
 
     #[tokio::test]
     async fn connect_local_db_works() -> Result<()> {

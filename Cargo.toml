@@ -4,9 +4,13 @@ version = "1.0.0"
 edition = "2021"
 
 [[bin]]
-name = "tx-coordinator"
-path = "src/bin.rs"
+name = "txcoordinator"
+path = "src/main.rs"
 doc = false
+
+[lib]
+name = "txcoordinator"
+path = "src/lib.rs"
 
 [dependencies]
 clap = { version = "3.0.12", features = ["derive"] }
