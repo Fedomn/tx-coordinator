@@ -11,11 +11,16 @@ pub fn init_log() -> (WorkerGuard, Span) {
     let file_appender = tracing_appender::rolling::never("./", "tx-coordinator.log");
     let (non_blocking, _file_guard) = tracing_appender::non_blocking(file_appender);
 
+    let event_format = format()
+        .compact()
+        .with_target(false)
+        .with_thread_names(true)
+        .with_thread_ids(true);
     let file_layer = fmt::layer()
-        .event_format(format().compact())
+        .event_format(event_format.clone())
         .with_writer(non_blocking);
     let std_layer = fmt::layer()
-        .event_format(format().compact())
+        .event_format(event_format)
         .with_writer(std::io::stdout);
 
     let filter_layer = EnvFilter::try_from_default_env()
