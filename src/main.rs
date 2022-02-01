@@ -37,11 +37,11 @@ async fn main() -> Result<()> {
     let args = Args::parse();
     info!("Got args: {:?}", args);
 
-    let dbs_cfg = DbsCfg::new(&args.cfg).unwrap();
+    let dbs_cfg = DbsCfg::new(&args.cfg)?;
     let dbs_hub = Hub::new(&args.dir, &dbs_cfg);
     info!("Read cfg: {:?}", dbs_hub);
 
-    let txs = dbs_hub.build_tx().await.unwrap();
+    let txs = dbs_hub.build_tx().await?;
     info!("Init transaction done.");
 
     let coordinator = coordinator::TxCoordinator::new(txs);
