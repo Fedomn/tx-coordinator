@@ -1,0 +1,42 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build-rust:
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest, macos-latest ]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry
+      - name: Cache cargo index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target
+      - name: Install nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2022-01-27
+          override: true
+          components: rustfmt, clippy, rust-src
+      - name: Check code format
+        run: cargo fmt -- --check
+      - name: Check the package for errors
+        run: cargo check --all
+      - name: Lint rust sources
+        run: cargo clippy --all-targets --all-features --tests --benches -- -D warnings
+      - name: Run tests
+        run: cargo test --lib --all-features -- --test-threads=1 --nocapture
