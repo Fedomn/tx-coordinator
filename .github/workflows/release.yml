@@ -8,21 +8,32 @@ on:
 jobs:
   release:
     name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
+        name: [linux, macos]
         include:
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz tar.xz
-          - target: x86_64-apple-darwin
-            archive: zip
+          - name: linux
+            os: ubuntu-latest
+            artifact_name: target/release/txcoordinator
+            asset_name: txcoordinator-linux
+          - name: macos
+            os: macos-latest
+            artifact_name: target/release/txcoordinator
+            asset_name: txcoordinator-macos
+    runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUSTTARGET: ${{ matrix.target }}
-          ARCHIVE_TYPES: ${{ matrix.archive }}
-          TOOLCHAIN_VERSION: nightly-2022-01-27
+      - uses: actions/checkout@v2
+      - name: Install nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2022-01-27
+          override: true
+          components: rustfmt, clippy, rust-src
+      - name: Build
+        run: cargo build --release --locked
+      - name: Upload binaries to release
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.artifact_name }}
