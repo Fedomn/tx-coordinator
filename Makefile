@@ -3,7 +3,7 @@
 default: test
 
 test: fix
-	cargo test --all-features
+	cargo test --all-features --lib
 
 run:
 	cargo run
@@ -31,3 +31,16 @@ release: test doc
 
 simulate:
 	RUST_LOG=tx_coordinator=debug cargo run -- --cfg ./tests/cfg.toml --dir ./tests/sqlfiles
+
+
+cmd =
+ifeq "$(docker-compose)" ""
+  cmd = lima nerdctl compose
+endif
+
+db:
+	cd tests/docker && $(cmd) -f ./docker-compose.yml up
+
+# need run make db first
+it-test:
+	cargo test --test integration -- --test-threads=1
