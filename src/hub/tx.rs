@@ -6,8 +6,7 @@ use sqlx::{Pool, Postgres, Transaction};
 use tokio::sync::Mutex;
 use tokio_stream::StreamExt;
 
-/// https://github.com/pretzelhammer/rust-blog/blob/master/posts/common-rust-lifetime-misconceptions.md#2-if-t-static-then-t-must-be-valid-for-the-entire-program
-/// The latter can be dynamically allocated at run-time, can be safely and freely mutated, can be dropped, and can live for arbitrary durations.
+/// [The latter can be dynamically allocated at run-time, can be safely and freely mutated, can be dropped, and can live for arbitrary durations.](https://github.com/pretzelhammer/rust-blog/blob/master/posts/common-rust-lifetime-misconceptions.md#2-if-t-static-then-t-must-be-valid-for-the-entire-program)
 #[async_trait]
 pub trait Tx: Send + Sync + 'static {
     fn get_id(&self) -> String;
