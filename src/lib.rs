@@ -1,3 +1,5 @@
+#![feature(generic_associated_types)]
+#![feature(type_alias_impl_trait)]
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -5,7 +7,7 @@ use tracing::Span;
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::cfg::DbsCfg;
-use crate::hub::tx::Tx;
+use crate::hub::tx::{CopyDataTx, TxNew};
 use crate::hub::{coordinator, Hub};
 
 mod cfg;
@@ -22,7 +24,7 @@ pub fn read_cfg(cfg_file: &str, dir: &str) -> Result<Hub> {
     Ok(Hub::new(dir, &dbs_cfg))
 }
 
-pub async fn execute(txs: Vec<Arc<dyn Tx>>) -> Result<()> {
+pub async fn execute(txs: Vec<Arc<CopyDataTx>>) -> Result<()> {
     let coordinator = coordinator::TxCoordinator::new(txs);
     coordinator.commit_or_rollback().await
 }

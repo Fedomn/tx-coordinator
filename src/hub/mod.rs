@@ -6,7 +6,7 @@ use itertools::Itertools;
 
 use crate::cfg::DbsCfg;
 use crate::hub::db::DB;
-use crate::hub::tx::{CopyDataTx, Tx};
+use crate::hub::tx::CopyDataTx;
 
 pub mod coordinator;
 pub mod db;
@@ -78,8 +78,8 @@ impl Hub {
             .collect::<HashMap<String, DB>>()
     }
 
-    pub async fn build_tx(&self) -> Result<Vec<Arc<dyn Tx>>> {
-        let mut txs = Vec::<Arc<dyn Tx>>::new();
+    pub async fn build_tx(&self) -> Result<Vec<Arc<CopyDataTx>>> {
+        let mut txs = Vec::<Arc<CopyDataTx>>::new();
         for (schema, db) in self.dbs.iter() {
             let pool = db.gen_pool().await?;
             let tx = CopyDataTx::new(schema, pool, db.sql_files.clone()).await?;

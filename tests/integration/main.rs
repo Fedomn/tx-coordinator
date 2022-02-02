@@ -5,7 +5,7 @@ mod integration_test {
     use anyhow::Result;
 
     use txcoordinator::hub::db::DB;
-    use txcoordinator::hub::tx::{CopyDataTx, Tx};
+    use txcoordinator::hub::tx::{CopyDataTx, TxNew};
     use txcoordinator::{execute, init_log, read_cfg};
 
     #[tokio::test]
@@ -30,7 +30,7 @@ mod integration_test {
 
     #[tokio::test]
     async fn tx_rollback_works() -> Result<()> {
-        async fn run(tx: Arc<dyn Tx>) -> Result<()> {
+        async fn run(tx: Arc<CopyDataTx>) -> Result<()> {
             // use &self to avoid: cannot move a value of type dyn Tx: the size of dyn Tx cannot be statically determined
             tx.execute().await?;
             tx.rollback().await?;

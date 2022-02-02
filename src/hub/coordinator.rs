@@ -6,15 +6,15 @@ use tokio::sync::oneshot::{Receiver, Sender};
 use tokio::sync::{mpsc, oneshot};
 use tracing::{debug, info, warn};
 
-use crate::hub::tx::Tx;
+use crate::{CopyDataTx, TxNew};
 
 pub struct TxCoordinator {
     // Vec<Box<dyn Tx>> refer: https://stackoverflow.com/questions/66901861/incorrect-type-inference-for-rust-vector-of-trait-object
-    txs: Arc<Vec<Arc<dyn Tx>>>,
+    txs: Arc<Vec<Arc<CopyDataTx>>>,
 }
 
 impl TxCoordinator {
-    pub fn new(txs: Vec<Arc<dyn Tx>>) -> Self {
+    pub fn new(txs: Vec<Arc<CopyDataTx>>) -> Self {
         Self { txs: Arc::new(txs) }
     }
 
@@ -56,7 +56,7 @@ impl TxCoordinator {
 }
 
 async fn execute(
-    txs: Arc<Vec<Arc<dyn Tx>>>,
+    txs: Arc<Vec<Arc<CopyDataTx>>>,
     commit_send: Sender<()>,
     rollback_send: UnboundedSender<()>,
 ) {
@@ -97,7 +97,7 @@ async fn execute(
 }
 
 async fn commit(
-    txs: Arc<Vec<Arc<dyn Tx>>>,
+    txs: Arc<Vec<Arc<CopyDataTx>>>,
     commit_recv: Receiver<()>,
     done_send: UnboundedSender<()>,
     rollback_send: UnboundedSender<()>,
@@ -136,7 +136,7 @@ async fn commit(
 }
 
 async fn rollback(
-    txs: Arc<Vec<Arc<dyn Tx>>>,
+    txs: Arc<Vec<Arc<CopyDataTx>>>,
     done_send: UnboundedSender<()>,
     mut rollback_recv: UnboundedReceiver<()>,
 ) {
