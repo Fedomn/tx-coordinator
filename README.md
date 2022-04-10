@@ -5,6 +5,7 @@ Transaction Coordinator for SQL execution in different database
 ## Features
 
 - guaranteed different database statements in a logic transaction
+- each database only used one connection to execute multiple sql files
 
 ## Install
 
