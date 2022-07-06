@@ -14,7 +14,7 @@ impl DB {
     pub async fn gen_pool(&self) -> Result<Pool<Postgres>, Error> {
         PgPoolOptions::new()
             .max_connections(1)
-            .connect_timeout(Duration::from_secs(3))
+            .acquire_timeout(Duration::from_secs(3))
             .connect(self.secret.as_str())
             .await
     }
